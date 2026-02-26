@@ -1,43 +1,77 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Тихая помощь</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f8ff; color: #333; margin: 20px; }
-        h1 { color: #4682b4; }
-        p { font-size: 16px; }
-        a { color: #1e90ff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
+<meta charset="UTF-8">
+<title>Чат-бот в помощь</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
+
 <body>
-    <header>
-        <h1>Тихая помощь</h1>
-        <nav>
-            <ul>
-                <li><a href="/">Главная</a></li>
-                <li><a href="/states">Состояния</a></li>
-                <li><a href="/cities">По городам</a></li>
-                <li><a href="/chat">Чат</a></li>
-            </ul>
-        </nav>
-        <button onclick="switchLanguage('ru')">Русский</button>
-<button onclick="switchLanguage('kz')">Қазақша</button>
-    </header>
-    <p>Это анонимная платформа... (твой старый текст)</p>
-    <footer>Конфиденциальность гарантирована. Work-in-progress.</footer>
-    <script>
-    function switchLanguage(lang) {
-        if (lang === 'kz') {
-            document.querySelector('h1').textContent = 'Тыныш көмек';
-            // Добавь переводы для других текстов
-        } else {
-            document.querySelector('h1').textContent = 'Тихая помощь';
-            // Восстанови русский
-        }
-        // Расширь для всех текстов
-    }
+
+<section class="hero">
+  <div class="hero-content">
+    <h1>Ты не обязан справляться один 🤍</h1>
+    <p>Анонимная поддержка. Спокойный разговор. Без осуждения.</p>
+    <button onclick="scrollToChat()">Начать чат</button>
+  </div>
+</section>
+
+<section class="tips">
+  <h2>Мини-советы на 1 минуту</h2>
+  <div class="tip-grid">
+    <div class="tip-card">🫁 Сделай 5 медленных выдохов длиннее вдоха</div>
+    <div class="tip-card">🚶 Прогуляйся 5 минут</div>
+    <div class="tip-card">📝 Запиши одну тревожную мысль и отпусти её</div>
+  </div>
+</section>
+
+<section class="help">
+  <h2>Если нужна живая помощь</h2>
+  <p>Астана: +7 (7172) 55-55-55</p>
+  <p>Алматы: +7 (727) 111-22-33</p>
+  <p>Шымкент: +7 (7252) 44-55-66</p>
+</section>
+
+<section id="chat-section" class="chat-section">
+  <h2>Чат поддержки</h2>
+
+  <div id="chatBox" class="chat"></div>
+
+  <div class="inputArea">
+    <input id="message"
+           placeholder="Напишите, что вас беспокоит..."
+           onkeydown="if(event.key==='Enter'){sendMessage();}">
+    <button onclick="sendMessage()">Отправить</button>
+  </div>
+</section>
+
+<script>
+const socket = io();
+const chat = document.getElementById("chatBox");
+
+function scrollToChat(){
+  document.getElementById("chat-section").scrollIntoView({behavior:'smooth'});
+}
+
+function addMsg(text, cls){
+  chat.innerHTML += `<div class="msg ${cls}">${text}</div>`;
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function sendMessage(){
+  const input=document.getElementById("message");
+  const msg=input.value.trim();
+  if(!msg) return;
+  addMsg(msg,"user");
+  socket.emit("message",{msg:msg});
+  input.value="";
+}
+
+socket.on("response",function(data){
+  addMsg(data.msg,"bot");
+});
 </script>
+
 </body>
 </html>
