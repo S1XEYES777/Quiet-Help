@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Чат-бот в помощь</title>
+<title>Тихая помощь</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
@@ -10,43 +10,36 @@
 <body>
 
 <header class="topbar">
-  <div class="brand">🤍 Тихая помощь</div>
+  <div class="brand">
+    <div class="pulse">🤍</div>
+    <span>Тихая помощь</span>
+  </div>
   <button class="mode-btn" onclick="toggleMode()">🌙</button>
 </header>
 
 <section class="hero">
   <h1>Ты не обязан справляться один</h1>
-  <p>Спокойный разговор. Анонимная поддержка.</p>
-  <button onclick="scrollToChat()">Начать чат</button>
-</section>
-
-<section class="tips">
-  <h2>Мини-советы</h2>
-  <div class="tip-grid">
-    <div class="tip-card">🫁 Сделай 5 медленных выдохов</div>
-    <div class="tip-card">🚶 Прогуляйся 5 минут</div>
-    <div class="tip-card">📝 Запиши тревожную мысль</div>
-  </div>
-</section>
-
-<section class="help">
-  <h2>Живая помощь</h2>
-  <p>Астана: +7 (7172) 55-55-55</p>
-  <p>Алматы: +7 (727) 111-22-33</p>
+  <p>Анонимная поддержка 24/7</p>
+  <button onclick="scrollToChat()">Начать разговор</button>
 </section>
 
 <section id="chat-section" class="chat-section">
-  <h2>Чат поддержки</h2>
+  <div class="chat-card">
+    <div class="chat-header">
+      <span>Онлайн поддержка</span>
+      <div class="online-dot"></div>
+    </div>
 
-  <div id="chatBox" class="chat"></div>
+    <div id="chatBox" class="chat"></div>
 
-  <div class="typing" id="typing">Бот печатает...</div>
+    <div id="typing" class="typing">Бот печатает...</div>
 
-  <div class="inputArea">
-    <input id="message"
-           placeholder="Напишите, что вас беспокоит..."
-           onkeydown="if(event.key==='Enter'){sendMessage();}">
-    <button onclick="sendMessage()">Отправить</button>
+    <div class="inputArea">
+      <input id="message"
+             placeholder="Напишите сообщение..."
+             onkeydown="if(event.key==='Enter'){sendMessage();}">
+      <button onclick="sendMessage()">➤</button>
+    </div>
   </div>
 </section>
 
