@@ -3,70 +3,51 @@ import requests
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 
-# ---------- Flask ----------
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ---------- HuggingFace ----------
-HF_TOKEN = os.environ.get("HF_TOKEN")
+API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
-API_URL = "https://api-inference.huggingface.co/models/TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-
-headers = {
-    "Authorization": f"Bearer {HF_TOKEN}"
-}
-
-def query_hf(prompt):
+def query_ai(message):
     try:
         response = requests.post(
-            API_URL,
-            headers=headers,
-            json={"inputs": prompt},
-            timeout=60
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "deepseek/deepseek-chat",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Ты спокойный и поддерживающий помощник. Не ставь диагноз и не назначай лечение."
+                    },
+                    {
+                        "role": "user",
+                        "content": message
+                    }
+                ],
+                "temperature": 0.7
+            },
+            timeout=30
         )
 
-        result = response.json()
-
-        if isinstance(result, list):
-            return result[0]["generated_text"]
-        elif "error" in result:
-            return "Модель загружается или превышен лимит. Попробуйте позже."
-        else:
-            return "Ошибка ответа модели."
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
 
     except Exception:
-        return "Ошибка соединения с моделью."
+        return "Ошибка соединения. Попробуйте позже."
 
-# ---------- Route ----------
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
+    return render_template("index.html")
 
-# ---------- Socket ----------
-@socketio.on('message')
+@socketio.on("message")
 def handle_message(data):
-    try:
-        user_msg = data.get('msg', '')
+    user_msg = data.get("msg", "")
+    ai_response = query_ai(user_msg)
+    emit("response", {"msg": ai_response})
 
-        prompt = f"""
-Ты анонимный помощник психологической поддержки.
-Не ставь диагноз.
-Не назначай лечение.
-Говори спокойно и поддерживающе.
-Дай мягкие советы (дыхание, прогулка).
-Если кризис — предложи обратиться к специалистам в Казахстане
-(горячая линия Астана +7 (7172) 55-55-55).
-
-Сообщение пользователя: {user_msg}
-"""
-
-        ai_response = query_hf(prompt)
-
-        emit('response', {'msg': ai_response})
-
-    except Exception:
-        emit('response', {'msg': 'Ошибка. Попробуйте позже.'})
-
-# ---------- Run ----------
-if __name__ == '__main__':
+if __name__ == "__main__":
     socketio.run(app)
