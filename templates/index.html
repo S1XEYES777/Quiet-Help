@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Тихая помощь</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
@@ -9,37 +10,35 @@
 
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <div class="pulse">🤍</div>
-    <span>Тихая помощь</span>
-  </div>
-  <button class="mode-btn" onclick="toggleMode()">🌙</button>
+<header class="header">
+  <div class="logo">🤍 Тихая помощь</div>
 </header>
 
 <section class="hero">
   <h1>Ты не обязан справляться один</h1>
-  <p>Анонимная поддержка 24/7</p>
+  <p>Спокойный разговор. Анонимная поддержка.</p>
   <button onclick="scrollToChat()">Начать разговор</button>
 </section>
 
-<section id="chat-section" class="chat-section">
+<section id="chat-section" class="chat-wrapper">
   <div class="chat-card">
+
     <div class="chat-header">
-      <span>Онлайн поддержка</span>
-      <div class="online-dot"></div>
+      Онлайн поддержка
+      <span class="status-dot"></span>
     </div>
 
     <div id="chatBox" class="chat"></div>
 
     <div id="typing" class="typing">Бот печатает...</div>
 
-    <div class="inputArea">
+    <div class="input-area">
       <input id="message"
              placeholder="Напишите сообщение..."
              onkeydown="if(event.key==='Enter'){sendMessage();}">
       <button onclick="sendMessage()">➤</button>
     </div>
+
   </div>
 </section>
 
@@ -56,7 +55,7 @@ function scrollToChat(){
 function addMsg(text, cls){
   const div=document.createElement("div");
   div.className="msg "+cls;
-  div.innerText=text;
+  div.textContent=text;
   chat.appendChild(div);
   chat.scrollTop=chat.scrollHeight;
 }
@@ -76,10 +75,6 @@ socket.on("response",function(data){
   typing.style.display="none";
   addMsg(data.msg,"bot");
 });
-
-function toggleMode(){
-  document.body.classList.toggle("dark");
-}
 </script>
 
 </body>
