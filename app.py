@@ -1,82 +1,70 @@
-from flask import Flask, render_template, send_from_directory
+import os
+import requests
+from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-from cryptography.fernet import Fernet
-from langchain_community.llms import HuggingFacePipeline
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-# ---------- Шифрование ----------
-key = Fernet.generate_key()
-fernet = Fernet(key)
-
-# ---------- ИИ-модель (LangChain + Mistral) ----------
-from transformers import pipeline
-from langchain_community.llms import HuggingFacePipeline
-
-pipe = pipeline(
-    "text-generation",
-    model="mistralai/Mistral-7B-Instruct-v0.1",
-    device=-1,  # CPU
-    temperature=0.7,
-    max_new_tokens=200,
-    do_sample=True
-)
-
-llm = HuggingFacePipeline(pipeline=pipe)
-
-prompt = PromptTemplate(
-    input_variables=["user_message"],
-    template="Ты анонимный помощник в кризисах. Ответь этично, без диагностики или лечения: {user_message}. Дай общие советы (дыхание, прогулки), перенаправь к специалистам в Казахстане (горячие линии +7 (7172) 55-55-55 для Астаны). Если город упомянут — предложи локальную помощь."
-)
-
-chain = LLMChain(llm=llm, prompt=prompt)
 
 # ---------- Flask ----------
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# ---------- HuggingFace ----------
+HF_TOKEN = os.environ.get("HF_TOKEN")
+
+API_URL = "https://api-inference.huggingface.co/models/TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+headers = {
+    "Authorization": f"Bearer {HF_TOKEN}"
+}
+
+def query_hf(prompt):
+    response = requests.post(
+        API_URL,
+        headers=headers,
+        json={"inputs": prompt}
+    )
+
+    result = response.json()
+
+    if isinstance(result, list):
+        return result[0]["generated_text"]
+    elif "error" in result:
+        return "Модель загружается или превышен лимит. Попробуйте позже."
+    else:
+        return "Ошибка ответа модели."
 
 # ---------- Routes ----------
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/states')
-def states():
-    return render_template('states.html')
-
-@app.route('/cities')
-def cities():
-    return render_template('cities.html')
-
 @app.route('/chat')
 def chat():
     return render_template('chat.html')
 
-@app.route('/static/<path:path>')
-def static_files(path):
-    return send_from_directory('static', path)
-
-# ---------- SocketIO ----------
+# ---------- Socket ----------
 @socketio.on('message')
 def handle_message(data):
     try:
-        encrypted_msg = data['msg']
-        print("Зашифрованное:", encrypted_msg)
-        
-        decrypted_msg = fernet.decrypt(encrypted_msg.encode()).decode()
-        print("Расшифрованное:", decrypted_msg)
-        
-        # ИИ-ответ
-        response = chain.run(decrypted_msg)
-        
-        # Ограничения: Если кризис — добавь перенаправление
-        if "кризис" in decrypted_msg.lower() or "стресс" in decrypted_msg.lower():
-            response += " Обратитесь к локальным специалистам в разделе 'По городам'."
-        
-        emit('response', {'msg': response}, broadcast=False)
-    except Exception as e:
-        print("Ошибка:", str(e))
-        emit('response', {'msg': 'Ошибка, попробуйте позже.'}, broadcast=False)
+        user_msg = data['msg']
+
+        prompt = f"""
+Ты анонимный помощник психологической поддержки.
+Не ставь диагноз.
+Не назначай лечение.
+Дай мягкие советы (дыхание, прогулка).
+Если кризис — предложи обратиться к специалистам в Казахстане
+(горячая линия Астана +7 (7172) 55-55-55).
+
+Сообщение пользователя: {user_msg}
+"""
+
+        ai_response = query_hf(prompt)
+
+        emit('response', {'msg': ai_response})
+
+    except Exception:
+        emit('response', {'msg': 'Ошибка. Попробуйте позже.'})
 
 # ---------- Run ----------
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app)
