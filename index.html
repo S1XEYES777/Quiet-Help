@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тихая помощь</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f8ff; color: #333; margin: 20px; }
+        h1 { color: #4682b4; }
+        p { font-size: 16px; }
+        a { color: #1e90ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Тихая помощь</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/states">Состояния</a></li>
+                <li><a href="/cities">По городам</a></li>
+                <li><a href="/chat">Чат</a></li>
+            </ul>
+        </nav>
+        <button onclick="switchLanguage('ru')">Русский</button>
+<button onclick="switchLanguage('kz')">Қазақша</button>
+    </header>
+    <p>Это анонимная платформа... (твой старый текст)</p>
+    <footer>Конфиденциальность гарантирована. Work-in-progress.</footer>
+    <script>
+    function switchLanguage(lang) {
+        if (lang === 'kz') {
+            document.querySelector('h1').textContent = 'Тыныш көмек';
+            // Добавь переводы для других текстов
+        } else {
+            document.querySelector('h1').textContent = 'Тихая помощь';
+            // Восстанови русский
+        }
+        // Расширь для всех текстов
+    }
+</script>
+</body>
+</html>
