@@ -9,34 +9,38 @@
 
 <body>
 
+<header class="topbar">
+  <div class="brand">🤍 Тихая помощь</div>
+  <button class="mode-btn" onclick="toggleMode()">🌙</button>
+</header>
+
 <section class="hero">
-  <div class="hero-content">
-    <h1>Ты не обязан справляться один 🤍</h1>
-    <p>Анонимная поддержка. Спокойный разговор. Без осуждения.</p>
-    <button onclick="scrollToChat()">Начать чат</button>
-  </div>
+  <h1>Ты не обязан справляться один</h1>
+  <p>Спокойный разговор. Анонимная поддержка.</p>
+  <button onclick="scrollToChat()">Начать чат</button>
 </section>
 
 <section class="tips">
-  <h2>Мини-советы на 1 минуту</h2>
+  <h2>Мини-советы</h2>
   <div class="tip-grid">
-    <div class="tip-card">🫁 Сделай 5 медленных выдохов длиннее вдоха</div>
+    <div class="tip-card">🫁 Сделай 5 медленных выдохов</div>
     <div class="tip-card">🚶 Прогуляйся 5 минут</div>
-    <div class="tip-card">📝 Запиши одну тревожную мысль и отпусти её</div>
+    <div class="tip-card">📝 Запиши тревожную мысль</div>
   </div>
 </section>
 
 <section class="help">
-  <h2>Если нужна живая помощь</h2>
+  <h2>Живая помощь</h2>
   <p>Астана: +7 (7172) 55-55-55</p>
   <p>Алматы: +7 (727) 111-22-33</p>
-  <p>Шымкент: +7 (7252) 44-55-66</p>
 </section>
 
 <section id="chat-section" class="chat-section">
   <h2>Чат поддержки</h2>
 
   <div id="chatBox" class="chat"></div>
+
+  <div class="typing" id="typing">Бот печатает...</div>
 
   <div class="inputArea">
     <input id="message"
@@ -49,28 +53,40 @@
 <script>
 const socket = io();
 const chat = document.getElementById("chatBox");
+const typing = document.getElementById("typing");
 
 function scrollToChat(){
-  document.getElementById("chat-section").scrollIntoView({behavior:'smooth'});
+  document.getElementById("chat-section")
+  .scrollIntoView({behavior:'smooth'});
 }
 
 function addMsg(text, cls){
-  chat.innerHTML += `<div class="msg ${cls}">${text}</div>`;
-  chat.scrollTop = chat.scrollHeight;
+  const div=document.createElement("div");
+  div.className="msg "+cls;
+  div.innerText=text;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
 }
 
 function sendMessage(){
   const input=document.getElementById("message");
   const msg=input.value.trim();
   if(!msg) return;
+
   addMsg(msg,"user");
-  socket.emit("message",{msg:msg});
   input.value="";
+  typing.style.display="block";
+  socket.emit("message",{msg:msg});
 }
 
 socket.on("response",function(data){
+  typing.style.display="none";
   addMsg(data.msg,"bot");
 });
+
+function toggleMode(){
+  document.body.classList.toggle("dark");
+}
 </script>
 
 </body>
