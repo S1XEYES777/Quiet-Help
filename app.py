@@ -17,40 +17,42 @@ headers = {
 }
 
 def query_hf(prompt):
-    response = requests.post(
-        API_URL,
-        headers=headers,
-        json={"inputs": prompt}
-    )
+    try:
+        response = requests.post(
+            API_URL,
+            headers=headers,
+            json={"inputs": prompt},
+            timeout=60
+        )
 
-    result = response.json()
+        result = response.json()
 
-    if isinstance(result, list):
-        return result[0]["generated_text"]
-    elif "error" in result:
-        return "Модель загружается или превышен лимит. Попробуйте позже."
-    else:
-        return "Ошибка ответа модели."
+        if isinstance(result, list):
+            return result[0]["generated_text"]
+        elif "error" in result:
+            return "Модель загружается или превышен лимит. Попробуйте позже."
+        else:
+            return "Ошибка ответа модели."
 
-# ---------- Routes ----------
+    except Exception:
+        return "Ошибка соединения с моделью."
+
+# ---------- Route ----------
 @app.route('/')
 def home():
     return render_template('index.html')
-
-@app.route('/chat')
-def chat():
-    return render_template('chat.html')
 
 # ---------- Socket ----------
 @socketio.on('message')
 def handle_message(data):
     try:
-        user_msg = data['msg']
+        user_msg = data.get('msg', '')
 
         prompt = f"""
 Ты анонимный помощник психологической поддержки.
 Не ставь диагноз.
 Не назначай лечение.
+Говори спокойно и поддерживающе.
 Дай мягкие советы (дыхание, прогулка).
 Если кризис — предложи обратиться к специалистам в Казахстане
 (горячая линия Астана +7 (7172) 55-55-55).
